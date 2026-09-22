@@ -141,7 +141,7 @@ const simpleSubset = (sub, dom, options) => {
     return true
   }
 
-  let higher, lower
+  let higher
   let hasDomLT, hasDomGT
   // if the subset has a prerelease, we need a comparator in the superset
   // with the same tuple and a prerelease, or it's not a subset
@@ -188,8 +188,7 @@ const simpleSubset = (sub, dom, options) => {
         }
       }
       if (c.operator === '<' || c.operator === '<=') {
-        lower = lowerLT(lt, c, options)
-        if (lower === c && lower !== lt) {
+        if (!upperWithin(lt, c, options)) {
           return false
         }
       } else if (lt.operator === '<=' && !c.test(lt.semver)) {
@@ -221,6 +220,34 @@ const simpleSubset = (sub, dom, options) => {
 
   return true
 }
+
+// is the subset's upper bound (`lt`) entirely within the dom upper bound?
+// `<2.0.0-0` is the x-range sentinel meaning "up to but not including the
+// 2.0.0 release line", so `<2.0.0` fits inside it even though the raw
+// prerelease comparison would say 2.0.0 > 2.0.0-0.  `<=2.0.0` still does
+// not fit, because the release 2.0.0 itself cannot pass `<2.0.0-0`.
+const upperWithin = (lt, c, options) => {
+  if (isSentinelUpper(c)) {
+    // compare on the release tuple only: with prerelease gating enabled,
+    // `<2.0.0-0` and `<2.0.0` admit the same releases (everything below
+    // the 2.0.0 line), so an exclusive bound at the line still fits.
+    const a = [lt.semver.major, lt.semver.minor, lt.semver.patch]
+    const b = [c.semver.major, c.semver.minor, c.semver.patch]
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        return a[i] < b[i]
+      }
+    }
+    return lt.operator === '<'
+  }
+  const lower = lowerLT(lt, c, options)
+  return lower !== c || lower === lt
+}
+
+const isSentinelUpper = c =>
+  c.operator === '<' &&
+  c.semver.prerelease.length === 1 &&
+  c.semver.prerelease[0] === 0
 
 // >=1.2.3 is lower than >1.2.3
 const higherGT = (a, b, options) => {

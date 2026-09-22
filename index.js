@@ -43,6 +43,9 @@ const ltr = require('./ranges/ltr')
 const intersects = require('./ranges/intersects')
 const simplifyRange = require('./ranges/simplify')
 const subset = require('./ranges/subset')
+const normalizeRange = require('./ranges/normalize')
+const intersectRanges = require('./ranges/intersect')
+const minimumSatisfying = require('./ranges/minimum-satisfying')
 module.exports = {
   parse,
   valid,
@@ -82,6 +85,9 @@ module.exports = {
   intersects,
   simplifyRange,
   subset,
+  normalizeRange,
+  intersectRanges,
+  minimumSatisfying,
   SemVer,
   re: internalRe.re,
   src: internalRe.src,

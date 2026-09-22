@@ -531,6 +531,33 @@ strings that they parse.
 * `subset(subRange, superRange)`: Return `true` if the `subRange` range is
   entirely contained by the `superRange` range.
 
+### Range Negotiation
+
+These entry points provide one shared layer for range normalization,
+prerelease gating, intersection, subset, and minimum-version
+reconciliation.  Prereleases are admitted only when the same
+`[major, minor, patch]` tuple is present explicitly in the range, across
+all of them.  Invalid input never throws; it produces a `null` result.
+
+* `normalizeRange(range, options?)`: Collapse every supported spelling
+  (unions, hyphen ranges, wildcards/x-ranges, tildes, carets) into one
+  canonical comparator string.  Build metadata is stripped.  The result is
+  idempotent, so feeding it back in produces the same string.  Returns
+  `null` for invalid input.
+* `intersectRanges(ranges, options?)`: Intersect an array of ranges
+  pairwise over their simple ranges and return the canonical intersection
+  string, or `null` when the intersection is empty.  The result is
+  independent of argument order, a range intersects with itself as itself,
+  and the result can be passed straight back to `normalizeRange`.
+* `minimumSatisfying(range, options?)`: Return the smallest version that
+  satisfies the range as
+  `{ version, satisfies, blocked, cached, cache }`.  When nothing passes,
+  `blocked` names the `setIndex`, `comparator`, blocking version, and the
+  `segment` (`'major'`, `'minor'`, `'patch'`, or `'prerelease'`) that
+  stopped it.  Answers are cached per range spelling and option flags;
+  `cache` is `'hit'` or `'miss'` and different options never share an
+  entry.
+
 Note that, since ranges may be non-contiguous, a version might not be
 greater than a range, less than a range, *or* satisfy a range!  For
 example, the range `1.2 <1.2.9 || >2.0.0` would have a hole from `1.2.9`
@@ -677,4 +704,3 @@ The following modules are available:
 * `require('semver/ranges/subset')`
 * `require('semver/ranges/to-comparators')`
 * `require('semver/ranges/valid')`
-

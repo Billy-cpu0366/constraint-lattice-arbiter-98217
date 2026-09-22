@@ -38,6 +38,18 @@ const cases = [
   ['1 <=1.2.3-pre.0', '<=1.2.3-pre.0', true],
   ['1 <=1.2.3-pre.0', '<=1.2.3-pre.0', true, { includePrerelease: true }],
   ['<1.2.3-pre.0', '<=1.2.3-pre.0', true],
+
+  // `<2.0.0-0` is the x-range sentinel for "below the 2.0.0 release line"
+  ['>=1.2.0 <2.0.0', '>=1.0.0 <2.0.0-0', true],
+  ['>=1.2.0 <=2.0.0', '>=1.0.0 <2.0.0-0', false],
+  ['>=1.2.0 <2.0.0', '^1.0.0', true],
+  ['>=1.2.0 <=2.0.0', '^1.0.0', false],
+
+  // a range carrying prereleases is not a subset of one that does not
+  // explicitly admit the same tuple
+  ['>=1.2.3-alpha <2.0.0', '>=1.0.0 <2.0.0', false],
+  ['>=1.2.3-alpha <1.2.4', '>=1.2.3-alpha <1.3.0', true],
+  ['>=2.0.0-alpha', '>=1.0.0 <2.0.0', false],
   ['<1.2.3-pre.0', '<1.2.3-pre.0 || 2', true],
   ['1 <1.2.3-pre.0', '<1.2.3-pre.0', true],
 
